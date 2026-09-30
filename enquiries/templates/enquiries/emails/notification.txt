@@ -1,0 +1,15 @@
+{% autoescape off %}New enquiry {{ enquiry.reference }}
+
+Name:          {{ enquiry.full_name }}
+Email:         {{ enquiry.email }}
+Phone:         {{ enquiry.phone|default:"(not given)" }}
+Postcode:      {{ enquiry.postcode|default:"(not given)" }}
+Property type: {{ enquiry.property_type }}
+Services:      {{ enquiry.services|join:", "|default:"(none selected)" }}
+Received:      {{ enquiry.created_at|date:"j M Y, H:i" }}
+
+Message:
+{{ enquiry.message }}
+
+Reply to this email to answer {{ enquiry.first_name }} directly.
+{% endautoescape %}

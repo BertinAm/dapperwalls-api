@@ -1,0 +1,42 @@
+# THIS REPOSITORY IS PUBLIC.
+# Namecheap cPanel "Setup Python App" deploys by `git pull` from a public
+# GitHub repo, so anything committed here is visible to the world.
+# Never commit secrets, credentials, server details, databases or logs.
+# Configuration lives in environment variables (set in cPanel) or a local .env.
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Private operational docs (keep these out of the public repo)
+DEPLOYMENT.md
+RUNBOOK*.md
+
+# Databases
+*.sqlite3
+*.sqlite3-journal
+
+# Django build output / uploads
+staticfiles/
+media/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.python-version
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

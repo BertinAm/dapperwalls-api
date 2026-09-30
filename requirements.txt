@@ -1,0 +1,3 @@
+# cPanel's "Setup Python App" screen looks for requirements.txt in the
+# application root, so this file just points at the production requirements.
+-r requirements/prod.txt

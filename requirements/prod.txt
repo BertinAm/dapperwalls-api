@@ -1,0 +1,3 @@
+-r base.txt
+# Pure-Python MySQL driver: installs on shared hosting without a compiler.
+PyMySQL>=1.1,<2

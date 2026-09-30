@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:24px;background:#f6f5f2;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e3e0da;border-radius:6px;padding:24px;font-size:15px;line-height:1.55;">
+    <p style="margin:0 0 14px;">Hi {{ enquiry.first_name }},</p>
+    <p style="margin:0 0 14px;">Thanks for getting in touch with DapperWalls. We've received your enquiry and one of the team will be in touch soon to talk it through.</p>
+    <p style="margin:0 0 14px;">Your reference is <strong>{{ enquiry.reference }}</strong>. If you need to add anything or have photos of the space, just reply to this email and quote that reference.</p>
+    <p style="margin:0 0 6px;color:#666;">Here's what you sent us:</p>
+    <p style="margin:0 0 18px;padding:12px;background:#f6f5f2;border-radius:4px;white-space:pre-wrap;">{{ enquiry.message }}</p>
+    <p style="margin:0;">Speak soon,<br>The DapperWalls team<br><a href="mailto:{{ support_email }}" style="color:#555;">{{ support_email }}</a></p>
+  </div>
+</body>
+</html>

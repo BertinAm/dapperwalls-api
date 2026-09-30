@@ -1,0 +1,14 @@
+{% autoescape off %}Hi {{ enquiry.first_name }},
+
+Thanks for getting in touch with DapperWalls. We've received your enquiry and one of the team will be in touch soon to talk it through.
+
+Your reference is {{ enquiry.reference }}. If you need to add anything or have photos of the space, just reply to this email and quote that reference.
+
+Here's what you sent us:
+
+{{ enquiry.message }}
+
+Speak soon,
+The DapperWalls team
+{{ support_email }}
+{% endautoescape %}
