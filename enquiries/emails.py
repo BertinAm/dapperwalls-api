@@ -43,11 +43,18 @@ def _notification_details(enquiry):
     ]
 
 
+def _setting(name, default):
+    # getattr with a default: an old server process that loaded settings before
+    # a deploy (and hasn't been restarted) must still be able to send emails.
+    return getattr(settings, name, default)
+
+
 def _common_context(enquiry):
+    site_url = _setting("SITE_URL", "https://dapperwalls.co.uk")
     return {
         "enquiry": enquiry,
-        "site_url": settings.SITE_URL,
-        "assets": settings.EMAIL_ASSET_BASE_URL,
+        "site_url": site_url,
+        "assets": _setting("EMAIL_ASSET_BASE_URL", site_url + "/email"),
         "support_email": settings.ENQUIRY_REPLY_TO_EMAIL,
         "checkatrade_url": "https://www.checkatrade.com/trades/dapperwallsltd",
     }
@@ -63,7 +70,7 @@ def send_notification(enquiry):
         context={
             **_common_context(enquiry),
             "details": _notification_details(enquiry),
-            "admin_url": settings.API_PUBLIC_URL
+            "admin_url": _setting("API_PUBLIC_URL", "https://api.dapperwalls.co.uk")
             + reverse("admin:enquiries_enquiry_change", args=[enquiry.pk]),
         },
     )
