@@ -83,6 +83,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "enquiries.middleware.AdminLoginThrottleMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -190,6 +191,14 @@ CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
 
 PROXY_SHARED_SECRET = env("PROXY_SHARED_SECRET", "")
 TRUSTED_IP_HEADER = env("TRUSTED_IP_HEADER", "HTTP_CF_CONNECTING_IP")
+# Trust TRUSTED_IP_HEADER only on requests whose REMOTE_ADDR is a Cloudflare
+# edge address (on by default; turn off only behind a different proxy).
+TRUSTED_IP_HEADER_REQUIRES_CLOUDFLARE = env_bool("TRUSTED_IP_HEADER_REQUIRES_CLOUDFLARE", True)
+# In production the enquiry endpoint only accepts requests from the site's
+# Cloudflare Worker (valid X-Proxy-Token). Direct calls to the API, including
+# straight to the server's IP, are refused, so the form can't be scripted
+# around the site to spam people with confirmation emails.
+REQUIRE_PROXY_TOKEN = env_bool("REQUIRE_PROXY_TOKEN", not DEBUG and not TESTING)
 
 # --- Enquiries --------------------------------------------------------------
 
@@ -202,6 +211,13 @@ SITE_URL = env("SITE_URL", "https://dapperwalls.co.uk").rstrip("/")
 API_PUBLIC_URL = env("API_PUBLIC_URL", "https://api.dapperwalls.co.uk").rstrip("/")
 EMAIL_ASSET_BASE_URL = env("EMAIL_ASSET_BASE_URL", SITE_URL + "/email").rstrip("/")
 ENQUIRY_MIN_ELAPSED_MS = env_int("ENQUIRY_MIN_ELAPSED_MS", 2500)
+# At most this many enquiries per email address per day; stops the form
+# being used to flood someone's inbox with confirmation emails.
+ENQUIRIES_PER_EMAIL_PER_DAY = env_int("ENQUIRIES_PER_EMAIL_PER_DAY", 3)
+# Admin login: block an IP for ADMIN_LOGIN_LOCKOUT_SECONDS after this many
+# failed attempts.
+ADMIN_LOGIN_MAX_FAILURES = env_int("ADMIN_LOGIN_MAX_FAILURES", 5)
+ADMIN_LOGIN_LOCKOUT_SECONDS = env_int("ADMIN_LOGIN_LOCKOUT_SECONDS", 15 * 60)
 ENQUIRY_MAX_BODY_BYTES = 32 * 1024
 RATE_LIMIT_PER_HOUR = env_int("RATE_LIMIT_PER_HOUR", 5)
 RATE_LIMIT_PER_DAY = env_int("RATE_LIMIT_PER_DAY", 20)
@@ -240,6 +256,10 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 X_FRAME_OPTIONS = "DENY"
 SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+# Admin sessions end after 8 hours, or when the browser closes.
+SESSION_COOKIE_AGE = 8 * 60 * 60
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # --- Logging ----------------------------------------------------------------
 # stderr is captured by Passenger (see the app's stderr.log in cPanel).

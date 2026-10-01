@@ -1,15 +1,17 @@
 import json
 import logging
+from datetime import timedelta
 
 from django.conf import settings
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from . import ratelimit
 from .client_ip import get_client_ip, has_valid_proxy_token
 from .emails import send_enquiry_emails
 from .models import Enquiry, generate_reference
-from .validation import validate_enquiry
+from .validation import MAX_LINKS, count_links, validate_enquiry
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,10 @@ def _looks_like_bot(data):
 def create_enquiry(request):
     if request.method != "POST":
         return error(405, "Method not allowed.", Allow="POST")
+
+    if settings.REQUIRE_PROXY_TOKEN and not has_valid_proxy_token(request):
+        logger.warning("Rejected enquiry without a valid proxy token from %s", get_client_ip(request))
+        return error(403, "Please send your enquiry through dapperwalls.co.uk.")
 
     origin = request.headers.get("Origin")
     if origin and origin not in settings.CORS_ALLOWED_ORIGINS and not has_valid_proxy_token(request):
@@ -87,6 +93,15 @@ def create_enquiry(request):
     cleaned, errors = validate_enquiry(data)
     if errors:
         return JsonResponse({"ok": False, "errors": errors}, status=400)
+
+    if count_links(cleaned["message"]) > MAX_LINKS:
+        logger.info("Discarded link-heavy enquiry from %s", ip)
+        return JsonResponse({"ok": True, "reference": generate_reference()}, status=201)
+
+    since = timezone.now() - timedelta(days=1)
+    if Enquiry.objects.filter(email__iexact=cleaned["email"], created_at__gte=since).count() >= settings.ENQUIRIES_PER_EMAIL_PER_DAY:
+        logger.warning("Per-address limit hit for an enquiry from %s", ip)
+        return error(429, RATE_LIMIT_MESSAGE, Retry_After="86400")
 
     enquiry = Enquiry.objects.create(
         **cleaned,

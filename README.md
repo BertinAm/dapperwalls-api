@@ -121,3 +121,12 @@ python manage.py check --deploy
 The only expected warning is `security.W021` (HSTS preload not enabled). That
 is deliberate; set `SECURE_HSTS_PRELOAD=True` only if you decide to submit the
 domain to the browser preload list.
+
+## Security
+
+- **Proxy only in production.** `POST /api/enquiries/` requires the Cloudflare Worker's `X-Proxy-Token` (`REQUIRE_PROXY_TOKEN`, on by default when `DEBUG=False`). Direct calls, including to the server's IP, get 403.
+- **Client IP.** `X-Client-IP` is trusted only with a valid proxy token. `CF-Connecting-IP` is trusted only when the connection comes from a Cloudflare edge address, so it can't be forged by hitting the origin directly.
+- **Rate limits.** Per IP per hour and per day, plus at most `ENQUIRIES_PER_EMAIL_PER_DAY` (default 3) enquiries per email address, so the form can't flood someone's inbox with confirmations.
+- **Input sanitising.** NFC normalisation; control and invisible formatting characters removed; line breaks stripped from single-line fields (they go into email headers); names limited to letters and name punctuation; phone and postcode character sets; messages with more than 3 links are dropped silently as spam. All output is HTML-escaped in templates; CSV export escapes spreadsheet formulas.
+- **Bots.** Honeypot field plus a minimum fill time; both get a fake success.
+- **Admin.** Custom `ADMIN_URL`; 5 failed logins from one IP lock that IP out for 15 minutes; sessions last 8 hours and end when the browser closes; secure, HTTP-only cookies.

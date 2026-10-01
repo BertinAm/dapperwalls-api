@@ -43,6 +43,7 @@ def payload(**overrides):
     RATE_LIMIT_PER_HOUR=5,
     RATE_LIMIT_PER_DAY=20,
     ENQUIRY_MIN_ELAPSED_MS=2500,
+    ENQUIRIES_PER_EMAIL_PER_DAY=100,
     ENQUIRY_NOTIFY_EMAIL=["support@dapperwalls.co.uk"],
     DEFAULT_FROM_EMAIL="DapperWalls <support@dapperwalls.co.uk>",
 )
@@ -105,7 +106,7 @@ class HappyPathTests(EnquiryApiTestCase):
         self.assertEqual(enquiry.services, [])
 
     def test_html_email_escapes_customer_input(self):
-        self.post(payload(first_name="<script>x</script>"))
+        self.post(payload(message="Hello <script>x</script> there, two rooms please."))
         html = mail.outbox[0].alternatives[0][0]
         self.assertNotIn("<script>", html)
         self.assertIn("&lt;script&gt;", html)
@@ -267,9 +268,10 @@ class ClientIpTests(EnquiryApiTestCase):
         ip = self.saved_ip(
             HTTP_X_PROXY_TOKEN="wrong",
             HTTP_X_CLIENT_IP="192.0.2.10",
-            HTTP_CF_CONNECTING_IP="172.64.0.1",
+            HTTP_CF_CONNECTING_IP="198.51.100.77",
+            REMOTE_ADDR="172.64.0.1",
         )
-        self.assertEqual(ip, "172.64.0.1")
+        self.assertEqual(ip, "198.51.100.77")
 
     def test_missing_token_ignores_x_client_ip(self):
         ip = self.saved_ip(HTTP_X_CLIENT_IP="192.0.2.10", REMOTE_ADDR="10.0.0.2")
@@ -285,6 +287,7 @@ class ClientIpTests(EnquiryApiTestCase):
             HTTP_X_PROXY_TOKEN=SECRET,
             HTTP_X_CLIENT_IP="not-an-ip",
             HTTP_CF_CONNECTING_IP="2001:db8::1, 10.0.0.9",
+            REMOTE_ADDR="162.158.10.10",
         )
         self.assertEqual(ip, "2001:db8::1")
 
@@ -392,7 +395,9 @@ class AdminTests(EnquiryApiTestCase):
         self.user = get_user_model().objects.create_superuser("owner", "owner@example.com", "pw-for-tests-only")
         self.client.force_login(self.user)
         self.post()
-        self.post(payload(first_name="=HYPERLINK(1)", email="b@example.com"))
+        Enquiry.objects.create(
+            first_name="=HYPERLINK(1)", last_name="Test", email="b@example.com", message="Spreadsheet formula test."
+        )
 
     def test_changelist_and_change_page_load(self):
         changelist = reverse("admin:enquiries_enquiry_changelist")
