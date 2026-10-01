@@ -191,7 +191,8 @@ TRUSTED_IP_HEADER = env("TRUSTED_IP_HEADER", "HTTP_CF_CONNECTING_IP")
 
 # --- Enquiries --------------------------------------------------------------
 
-ENQUIRY_NOTIFY_EMAIL = env("ENQUIRY_NOTIFY_EMAIL", "support@dapperwalls.co.uk")
+# Comma-separated: every address gets each new-enquiry notification.
+ENQUIRY_NOTIFY_EMAIL = env_list("ENQUIRY_NOTIFY_EMAIL", "support@dapperwalls.co.uk")
 ENQUIRY_REPLY_TO_EMAIL = env("ENQUIRY_REPLY_TO_EMAIL", "support@dapperwalls.co.uk")
 ENQUIRY_MIN_ELAPSED_MS = env_int("ENQUIRY_MIN_ELAPSED_MS", 2500)
 ENQUIRY_MAX_BODY_BYTES = 32 * 1024

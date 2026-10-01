@@ -15,7 +15,7 @@ def _send(subject, to, reply_to, template, context):
         subject=subject,
         body=render_to_string(f"enquiries/emails/{template}.txt", context),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[to],
+        to=list(to) if isinstance(to, (list, tuple)) else [to],
         reply_to=[reply_to],
     )
     message.attach_alternative(

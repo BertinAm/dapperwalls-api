@@ -43,7 +43,7 @@ def payload(**overrides):
     RATE_LIMIT_PER_HOUR=5,
     RATE_LIMIT_PER_DAY=20,
     ENQUIRY_MIN_ELAPSED_MS=2500,
-    ENQUIRY_NOTIFY_EMAIL="support@dapperwalls.co.uk",
+    ENQUIRY_NOTIFY_EMAIL=["support@dapperwalls.co.uk"],
     DEFAULT_FROM_EMAIL="DapperWalls <support@dapperwalls.co.uk>",
 )
 class EnquiryApiTestCase(TestCase):
@@ -109,6 +109,12 @@ class HappyPathTests(EnquiryApiTestCase):
         html = mail.outbox[0].alternatives[0][0]
         self.assertNotIn("<script>", html)
         self.assertIn("&lt;script&gt;", html)
+
+    @override_settings(ENQUIRY_NOTIFY_EMAIL=["support@dapperwalls.co.uk", "owner@example.com"])
+    def test_notification_goes_to_every_configured_address(self):
+        self.post()
+        notification = next(m for m in mail.outbox if m.subject.startswith("New enquiry"))
+        self.assertEqual(notification.to, ["support@dapperwalls.co.uk", "owner@example.com"])
 
     def test_url_without_trailing_slash_works(self):
         response = self.client.post("/api/enquiries", json.dumps(payload()), content_type="application/json")
