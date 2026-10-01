@@ -1,15 +1,17 @@
 {% autoescape off %}New enquiry {{ enquiry.reference }}
 
-Name:          {{ enquiry.full_name }}
-Email:         {{ enquiry.email }}
-Phone:         {{ enquiry.phone|default:"(not given)" }}
-Postcode:      {{ enquiry.postcode|default:"(not given)" }}
-Property type: {{ enquiry.property_type }}
-Services:      {{ enquiry.services|join:", "|default:"(none selected)" }}
-Received:      {{ enquiry.created_at|date:"j M Y, H:i" }}
+{{ enquiry.full_name }}
+{{ enquiry.property_type }}{% if enquiry.postcode %} · {{ enquiry.postcode }}{% endif %} · {{ enquiry.created_at|date:"D j M Y, H:i" }}
 
-Message:
+Email:     {{ enquiry.email }}
+Phone:     {{ enquiry.phone|default:"(not given)" }}
+Postcode:  {{ enquiry.postcode|default:"(not given)" }}
+Property:  {{ enquiry.property_type }}
+Services:  {{ enquiry.services|join:", "|default:"(none selected)" }}
+
+Their message:
 {{ enquiry.message }}
 
 Reply to this email to answer {{ enquiry.first_name }} directly.
+Open in admin: {{ admin_url }}
 {% endautoescape %}

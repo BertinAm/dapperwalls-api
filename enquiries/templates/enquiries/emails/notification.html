@@ -1,20 +1,68 @@
-<!doctype html>
-<html lang="en">
-<body style="margin:0;padding:24px;background:#f6f5f2;font-family:Arial,Helvetica,sans-serif;color:#222;">
-  <div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #e3e0da;border-radius:6px;padding:24px;">
-    <h1 style="font-size:20px;margin:0 0 16px;">New enquiry {{ enquiry.reference }}</h1>
-    <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:14px;width:100%;">
-      <tr><td style="color:#666;width:130px;">Name</td><td><strong>{{ enquiry.full_name }}</strong></td></tr>
-      <tr><td style="color:#666;">Email</td><td><a href="mailto:{{ enquiry.email }}">{{ enquiry.email }}</a></td></tr>
-      <tr><td style="color:#666;">Phone</td><td>{% if enquiry.phone %}<a href="tel:{{ enquiry.phone }}">{{ enquiry.phone }}</a>{% else %}<span style="color:#999;">Not given</span>{% endif %}</td></tr>
-      <tr><td style="color:#666;">Postcode</td><td>{{ enquiry.postcode|default:"Not given" }}</td></tr>
-      <tr><td style="color:#666;">Property type</td><td>{{ enquiry.property_type }}</td></tr>
-      <tr><td style="color:#666;">Services</td><td>{{ enquiry.services|join:", "|default:"None selected" }}</td></tr>
-      <tr><td style="color:#666;">Received</td><td>{{ enquiry.created_at|date:"j M Y, H:i" }}</td></tr>
-    </table>
-    <h2 style="font-size:16px;margin:20px 0 8px;">Message</h2>
-    <p style="font-size:14px;line-height:1.5;white-space:pre-wrap;margin:0;">{{ enquiry.message }}</p>
-    <p style="font-size:13px;color:#666;margin:20px 0 0;">Reply to this email to answer {{ enquiry.first_name }} directly.</p>
-  </div>
-</body>
-</html>
+{% extends "enquiries/emails/_base.html" %}
+{% block title %}New enquiry {{ enquiry.reference }}{% endblock %}
+{% block preheader %}{{ enquiry.full_name }}{% if enquiry.services %} &middot; {{ enquiry.services|join:", " }}{% endif %}{% if enquiry.postcode %} &middot; {{ enquiry.postcode }}{% endif %}{% endblock %}
+
+{% block header %}
+<td align="left" valign="middle" width="56">
+  <img src="{{ assets }}/dapperwalls-mark-dark@2x.png" width="40" height="40" alt="DapperWalls" style="display:block;width:40px;height:40px;">
+</td>
+<td align="left" valign="middle" class="dw-font" style="padding-left:4px;">
+  <p style="margin:0;font-size:12px;line-height:16px;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:#E09966;">New enquiry</p>
+  <p style="margin:2px 0 0;font-size:15px;line-height:20px;color:#CECECE;">via dapperwalls.co.uk</p>
+</td>
+<td align="right" valign="middle" class="dw-font">
+  <p style="margin:0;font-size:20px;line-height:24px;font-weight:600;letter-spacing:1.2px;color:#F1F1F1;">{{ enquiry.reference }}</p>
+</td>
+{% endblock %}
+
+{% block content %}
+<h1 class="dw-h1" style="margin:0 0 8px;font-size:36px;line-height:42px;font-weight:300;letter-spacing:-1.1px;color:#060606;">{{ enquiry.full_name }}</h1>
+<p style="margin:0 0 26px;font-size:15px;line-height:22px;color:#6A6A6A;">{{ enquiry.property_type }}{% if enquiry.postcode %} &middot; {{ enquiry.postcode }}{% endif %} &middot; {{ enquiry.created_at|date:"D j M Y, H:i" }}</p>
+
+<!-- Actions -->
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 34px;"><tr>
+  <td bgcolor="#CC5500" style="background:#CC5500;border-radius:999px;">
+    <a href="mailto:{{ enquiry.email }}?subject=Your%20DapperWalls%20enquiry%20{{ enquiry.reference }}" style="display:inline-block;padding:13px 22px;font-size:14px;line-height:18px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:999px;">Reply to {{ enquiry.first_name }}</a>
+  </td>
+  {% if enquiry.phone %}
+  <td width="10" style="width:10px;">&nbsp;</td>
+  <td>
+    <a href="tel:{{ enquiry.phone|cut:' ' }}" style="display:inline-block;padding:12px 20px;border:1px solid #060606;font-size:14px;line-height:18px;font-weight:600;color:#060606;text-decoration:none;border-radius:999px;">Call {{ enquiry.phone }}</a>
+  </td>
+  {% endif %}
+  <td width="10" style="width:10px;" class="dw-hide-sm">&nbsp;</td>
+  <td class="dw-hide-sm">
+    <a href="{{ admin_url }}" style="display:inline-block;padding:12px 6px;font-size:14px;line-height:18px;font-weight:600;color:#A84600;text-decoration:none;">Open in admin &rarr;</a>
+  </td>
+</tr></table>
+
+<!-- Details -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #E4E4E4;">
+  {% for label, value, link in details %}
+  <tr>
+    <td width="130" valign="top" style="width:130px;padding:13px 0;border-bottom:1px solid #E4E4E4;font-size:12px;line-height:20px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:#6A6A6A;">{{ label }}</td>
+    <td valign="top" style="padding:13px 0;border-bottom:1px solid #E4E4E4;font-size:15px;line-height:20px;color:#060606;">
+      {% if link %}<a href="{{ link }}" style="color:#060606;text-decoration:underline;">{{ value }}</a>{% elif value %}{{ value }}{% else %}<span style="color:#9D9D9D;">Not given</span>{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  <tr>
+    <td width="130" valign="top" style="width:130px;padding:13px 0;border-bottom:1px solid #E4E4E4;font-size:12px;line-height:20px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:#6A6A6A;">Services</td>
+    <td valign="top" style="padding:10px 0 7px;border-bottom:1px solid #E4E4E4;font-size:0;line-height:0;">
+      {% for s in enquiry.services %}<span style="display:inline-block;margin:0 6px 6px 0;padding:5px 11px;background:#F5DDCC;border-radius:999px;font-size:13px;line-height:16px;color:#6E2E00;">{{ s }}</span>{% empty %}<span style="display:inline-block;padding:3px 0 6px;font-size:15px;line-height:20px;color:#9D9D9D;">None selected</span>{% endfor %}
+    </td>
+  </tr>
+</table>
+
+<!-- Message -->
+<p style="margin:32px 0 12px;font-size:12px;line-height:16px;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:#060606;">Their message</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F1F1F1" style="background:#F1F1F1;border-radius:10px;">
+  <tr><td style="padding:20px 22px;font-size:16px;line-height:26px;color:#060606;white-space:pre-wrap;">{{ enquiry.message }}</td></tr>
+</table>
+
+<p style="margin:26px 0 0;font-size:13px;line-height:20px;color:#6A6A6A;">Replying to this email goes straight to {{ enquiry.first_name }}. They&rsquo;ve been sent a confirmation with reference {{ enquiry.reference }}.</p>
+{% endblock %}
+
+{% block footer %}
+<p style="margin:0;font-size:12px;line-height:18px;color:#9D9D9D;">Sent by the dapperwalls.co.uk quote form &middot; <a href="{{ admin_url }}" style="color:#CECECE;">Manage this enquiry</a></p>
+{% endblock %}

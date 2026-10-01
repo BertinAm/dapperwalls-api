@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en-GB" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>{% block title %}DapperWalls{% endblock %}</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; padding:0; width:100% !important; background:#F1F1F1; -webkit-text-size-adjust:100%; }
+  table { border-collapse:collapse; mso-table-lspace:0; mso-table-rspace:0; }
+  img { border:0; line-height:100%; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; }
+  a { color:#A84600; }
+  .dw-font { font-family:'Plus Jakarta Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+  @media (max-width: 620px) {
+    .dw-shell { width:100% !important; }
+    .dw-pad { padding-left:24px !important; padding-right:24px !important; }
+    .dw-h1 { font-size:30px !important; line-height:36px !important; }
+    .dw-stack { display:block !important; width:100% !important; }
+    .dw-hide-sm { display:none !important; }
+  }
+</style>
+</head>
+<body class="dw-font" style="margin:0;padding:0;background:#F1F1F1;">
+<!-- Inbox preview text -->
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#F1F1F1;opacity:0;">{% block preheader %}{% endblock %}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F1F1F1" style="background:#F1F1F1;">
+<tr><td align="center" style="padding:32px 12px;">
+
+  <table role="presentation" class="dw-shell" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+
+    <!-- Header -->
+    <tr><td bgcolor="#060606" style="background:#060606;border-radius:14px 14px 0 0;padding:28px 40px 24px;" class="dw-pad">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+        {% block header %}
+        <td align="left" valign="middle">
+          <a href="{{ site_url }}" style="text-decoration:none;"><img src="{{ assets }}/dapperwalls-logo-dark@2x.png" width="260" height="52" alt="DapperWalls" style="display:block;width:260px;max-width:100%;height:auto;"></a>
+        </td>
+        {% endblock %}
+      </tr></table>
+    </td></tr>
+    <tr><td bgcolor="#CC5500" style="background:#CC5500;height:4px;line-height:4px;font-size:4px;">&nbsp;</td></tr>
+
+    <!-- Body -->
+    <tr><td bgcolor="#FFFFFF" style="background:#FFFFFF;padding:44px 40px 40px;" class="dw-pad dw-font">
+      {% block content %}{% endblock %}
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td bgcolor="#060606" style="background:#060606;border-radius:0 0 14px 14px;padding:32px 40px;" class="dw-pad dw-font">
+      {% block footer %}
+      <p style="margin:0 0 6px;font-size:20px;line-height:26px;font-weight:300;color:#F1F1F1;letter-spacing:-0.3px;">Walls that tell stories.</p>
+      <p style="margin:0 0 22px;font-size:20px;line-height:26px;font-weight:300;color:#E09966;letter-spacing:-0.3px;">Spaces that inspire.</p>
+      <p style="margin:0 0 6px;font-size:13px;line-height:20px;color:#CECECE;">
+        <a href="{{ site_url }}" style="color:#F1F1F1;text-decoration:none;font-weight:600;">dapperwalls.co.uk</a>
+        &nbsp;&middot;&nbsp; <a href="mailto:{{ support_email }}" style="color:#F1F1F1;text-decoration:none;">{{ support_email }}</a>
+        &nbsp;&middot;&nbsp; <a href="{{ checkatrade_url }}" style="color:#F1F1F1;text-decoration:none;">Checkatrade</a>
+      </p>
+      <p style="margin:0;font-size:12px;line-height:18px;color:#9D9D9D;">Dapperwalls Ltd &middot; Chester, Cheshire &middot; Public liability insured up to &pound;1 million</p>
+      {% block footer_note %}{% endblock %}
+      {% endblock %}
+    </td></tr>
+
+  </table>
+
+</td></tr>
+</table>
+</body>
+</html>

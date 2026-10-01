@@ -15,7 +15,9 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / ".env", override=False)
+# Optional dotenv file. ENV_FILE lets cron jobs point at a file kept outside
+# the web folder (cron doesn't get the variables set in Setup Python App).
+load_dotenv(os.environ.get("ENV_FILE") or BASE_DIR / ".env", override=False)
 
 TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
@@ -194,6 +196,11 @@ TRUSTED_IP_HEADER = env("TRUSTED_IP_HEADER", "HTTP_CF_CONNECTING_IP")
 # Comma-separated: every address gets each new-enquiry notification.
 ENQUIRY_NOTIFY_EMAIL = env_list("ENQUIRY_NOTIFY_EMAIL", "support@dapperwalls.co.uk")
 ENQUIRY_REPLY_TO_EMAIL = env("ENQUIRY_REPLY_TO_EMAIL", "support@dapperwalls.co.uk")
+# Absolute URLs used in emails: the public site, this API (for admin links),
+# and where the email logo images are hosted (the site's public/email/ folder).
+SITE_URL = env("SITE_URL", "https://dapperwalls.co.uk").rstrip("/")
+API_PUBLIC_URL = env("API_PUBLIC_URL", "https://api.dapperwalls.co.uk").rstrip("/")
+EMAIL_ASSET_BASE_URL = env("EMAIL_ASSET_BASE_URL", SITE_URL + "/email").rstrip("/")
 ENQUIRY_MIN_ELAPSED_MS = env_int("ENQUIRY_MIN_ELAPSED_MS", 2500)
 ENQUIRY_MAX_BODY_BYTES = 32 * 1024
 RATE_LIMIT_PER_HOUR = env_int("RATE_LIMIT_PER_HOUR", 5)

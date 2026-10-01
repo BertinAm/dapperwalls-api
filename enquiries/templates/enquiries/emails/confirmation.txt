@@ -1,14 +1,26 @@
 {% autoescape off %}Hi {{ enquiry.first_name }},
 
-Thanks for getting in touch with DapperWalls. We've received your enquiry and one of the team will be in touch soon to talk it through.
+Thanks for getting in touch with DapperWalls. We've got your message, and one of the team will be in touch soon to talk it through.
 
-Your reference is {{ enquiry.reference }}. If you need to add anything or have photos of the space, just reply to this email and quote that reference.
+Your reference: {{ enquiry.reference }}
+Quote it if you get in touch, or just reply to this email.
 
-Here's what you sent us:
+WHAT HAPPENS NEXT
+{% for title, text in steps %}
+{{ forloop.counter }}. {{ title }}
+   {{ text }}
+{% endfor %}
+Got photos of the space? Reply to this email and attach them.
+
+WHAT YOU SENT US
+{% if enquiry.services %}{{ enquiry.services|join:", " }}
+{% endif %}{{ enquiry.property_type }}{% if enquiry.postcode %}, {{ enquiry.postcode }}{% endif %}
 
 {{ enquiry.message }}
 
 Speak soon,
 The DapperWalls team
-{{ support_email }}
+
+{{ site_url }} · {{ support_email }}
+Dapperwalls Ltd · Chester, Cheshire · Public liability insured up to £1 million
 {% endautoescape %}

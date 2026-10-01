@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 
 from .models import Enquiry
@@ -24,6 +25,34 @@ def _send(subject, to, reply_to, template, context):
     message.send(fail_silently=False)
 
 
+CONFIRMATION_STEPS = [
+    ("We'll be in touch", "By phone or email, to hear what you have in mind."),
+    ("We visit and quote", "We look at the room and the light, then send a written quote with each item listed."),
+    ("You see it before we start", "For decorative and plaster finishes, we make a sample board so you can see and touch the finish first."),
+]
+
+
+def _notification_details(enquiry):
+    """(label, value, link) rows for the team email."""
+    phone = enquiry.phone.replace(" ", "")
+    return [
+        ("Email", enquiry.email, f"mailto:{enquiry.email}"),
+        ("Phone", enquiry.phone, f"tel:{phone}" if phone else ""),
+        ("Postcode", enquiry.postcode, ""),
+        ("Property", enquiry.property_type, ""),
+    ]
+
+
+def _common_context(enquiry):
+    return {
+        "enquiry": enquiry,
+        "site_url": settings.SITE_URL,
+        "assets": settings.EMAIL_ASSET_BASE_URL,
+        "support_email": settings.ENQUIRY_REPLY_TO_EMAIL,
+        "checkatrade_url": "https://www.checkatrade.com/trades/dapperwallsltd",
+    }
+
+
 def send_notification(enquiry):
     """Email the business about a new enquiry. Reply-To is the customer."""
     _send(
@@ -31,7 +60,12 @@ def send_notification(enquiry):
         to=settings.ENQUIRY_NOTIFY_EMAIL,
         reply_to=enquiry.email,
         template="notification",
-        context={"enquiry": enquiry},
+        context={
+            **_common_context(enquiry),
+            "details": _notification_details(enquiry),
+            "admin_url": settings.API_PUBLIC_URL
+            + reverse("admin:enquiries_enquiry_change", args=[enquiry.pk]),
+        },
     )
 
 
@@ -42,7 +76,7 @@ def send_confirmation(enquiry):
         to=enquiry.email,
         reply_to=settings.ENQUIRY_REPLY_TO_EMAIL,
         template="confirmation",
-        context={"enquiry": enquiry, "support_email": settings.ENQUIRY_REPLY_TO_EMAIL},
+        context={**_common_context(enquiry), "steps": CONFIRMATION_STEPS},
     )
 
 
