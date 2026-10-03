@@ -7,11 +7,12 @@ Email:     {{ enquiry.email }}
 Phone:     {{ enquiry.phone|default:"(not given)" }}
 Postcode:  {{ enquiry.postcode|default:"(not given)" }}
 Property:  {{ enquiry.property_type }}
-Services:  {{ enquiry.services|join:", "|default:"(none selected)" }}
+Services:  {{ enquiry.services|join:", "|default:"(none selected)" }}{% for label, value, link in details %}{% if label == "Found us via" %}
+Found us:  {{ value }}{% endif %}{% endfor %}
 
 Their message:
 {{ enquiry.message }}
 
 Reply to this email to answer {{ enquiry.first_name }} directly.
-Open in admin: {{ admin_url }}
+Open in your dashboard: {{ admin_url }}
 {% endautoescape %}

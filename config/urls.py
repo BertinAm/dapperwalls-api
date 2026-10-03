@@ -9,4 +9,5 @@ admin.site.index_title = "Enquiries"
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     path("api/", include("enquiries.urls")),
+    path("api/", include("dashboard.urls")),
 ]

@@ -3,7 +3,6 @@ import logging
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils import timezone
 
 from .models import Enquiry
@@ -35,18 +34,39 @@ CONFIRMATION_STEPS = [
 def _notification_details(enquiry):
     """(label, value, link) rows for the team email."""
     phone = enquiry.phone.replace(" ", "")
-    return [
+    rows = [
         ("Email", enquiry.email, f"mailto:{enquiry.email}"),
         ("Phone", enquiry.phone, f"tel:{phone}" if phone else ""),
         ("Postcode", enquiry.postcode, ""),
         ("Property", enquiry.property_type, ""),
     ]
+    if enquiry.channel:
+        rows.append(("Found us via", _found_via(enquiry), ""))
+    return rows
+
+
+def _found_via(enquiry):
+    if enquiry.source and enquiry.source.lower() != enquiry.channel.lower():
+        return f"{enquiry.channel} ({enquiry.source})"
+    return enquiry.channel
 
 
 def _setting(name, default):
     # getattr with a default: an old server process that loaded settings before
     # a deploy (and hasn't been restarted) must still be able to send emails.
     return getattr(settings, name, default)
+
+
+def notify_recipients():
+    """Addresses set in the dashboard's Settings page, else ENQUIRY_NOTIFY_EMAIL."""
+    try:
+        from dashboard.models import DashboardSettings
+
+        chosen = DashboardSettings.load().notify_list
+    except Exception:  # table missing on a server that hasn't migrated yet
+        logger.exception("Couldn't read dashboard settings; using ENQUIRY_NOTIFY_EMAIL")
+        chosen = []
+    return chosen or list(settings.ENQUIRY_NOTIFY_EMAIL)
 
 
 def _common_context(enquiry):
@@ -64,14 +84,14 @@ def send_notification(enquiry):
     """Email the business about a new enquiry. Reply-To is the customer."""
     _send(
         subject=f"New enquiry {enquiry.reference}: {enquiry.full_name}",
-        to=settings.ENQUIRY_NOTIFY_EMAIL,
+        to=notify_recipients(),
         reply_to=enquiry.email,
         template="notification",
         context={
             **_common_context(enquiry),
             "details": _notification_details(enquiry),
-            "admin_url": _setting("API_PUBLIC_URL", "https://api.dapperwalls.co.uk")
-            + reverse("admin:enquiries_enquiry_change", args=[enquiry.pk]),
+            # Opens the enquiry in the dashboard (dapperwalls.co.uk/admin/).
+            "admin_url": f"{_setting('SITE_URL', 'https://dapperwalls.co.uk')}/admin/members/?ref={enquiry.reference}",
         },
     )
 

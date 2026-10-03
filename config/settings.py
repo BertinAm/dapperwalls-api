@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "enquiries",
+    "dashboard",
 ]
 
 MIDDLEWARE = [
@@ -183,7 +184,13 @@ CORS_ALLOWED_ORIGINS = env_list(
 if DEBUG:
     CORS_ALLOWED_ORIGINS += ["http://localhost:3000", "http://127.0.0.1:3000"]
 CORS_URLS_REGEX = r"^/api/.*$"
-CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+# The dashboard signs in with a session cookie. In production it is same-origin
+# (through the Worker); locally the Next dev server on :3000 calls :8000.
+CORS_ALLOW_CREDENTIALS = DEBUG
+CORS_EXPOSE_HEADERS = ["Content-Disposition"]
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS += ["http://localhost:3000", "http://127.0.0.1:3000"]
 
 # --- Proxy / client IP ------------------------------------------------------
 # The Cloudflare Pages Function sends X-Proxy-Token: <PROXY_SHARED_SECRET> and
@@ -260,6 +267,10 @@ CSRF_COOKIE_HTTPONLY = True
 # Admin sessions end after 8 hours, or when the browser closes.
 SESSION_COOKIE_AGE = 8 * 60 * 60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# Dashboard "Keep me signed in on this device".
+DASHBOARD_REMEMBER_DAYS = env_int("DASHBOARD_REMEMBER_DAYS", 14)
+# Password reset links (dashboard and Django admin) work for one hour.
+PASSWORD_RESET_TIMEOUT = 60 * 60
 
 # --- Logging ----------------------------------------------------------------
 # stderr is captured by Passenger (see the app's stderr.log in cPanel).

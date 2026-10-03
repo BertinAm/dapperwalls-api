@@ -4,6 +4,9 @@ from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
 
+from dashboard.models import LoginAttempt
+from dashboard.views import record_login
+
 from .client_ip import get_client_ip
 
 logger = logging.getLogger(__name__)
@@ -28,8 +31,10 @@ class AdminLoginThrottleMiddleware:
         ip = get_client_ip(request) or "unknown"
         key = f"admin-login-fail:{ip}"
         failures = cache.get(key, 0)
+        username = request.POST.get("username", "")
         if failures >= settings.ADMIN_LOGIN_MAX_FAILURES:
             logger.warning("Admin login blocked for %s after %s failures", ip, failures)
+            record_login(request, LoginAttempt.Area.DJANGO_ADMIN, LoginAttempt.Outcome.BLOCKED, username)
             return HttpResponse(
                 "Too many failed login attempts. Try again in 15 minutes.",
                 status=429,
@@ -41,6 +46,8 @@ class AdminLoginThrottleMiddleware:
         if response.status_code == 200:
             cache.set(key, failures + 1, settings.ADMIN_LOGIN_LOCKOUT_SECONDS)
             logger.warning("Failed admin login from %s (%s)", ip, failures + 1)
+            record_login(request, LoginAttempt.Area.DJANGO_ADMIN, LoginAttempt.Outcome.FAILED, username)
         elif response.status_code in (301, 302):
             cache.delete(key)
+            record_login(request, LoginAttempt.Area.DJANGO_ADMIN, LoginAttempt.Outcome.SUCCESS, username)
         return response

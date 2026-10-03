@@ -7,6 +7,8 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
+from dashboard.tracking import attribution_for, get_location, visitor_hash
+
 from . import ratelimit
 from .client_ip import get_client_ip, has_valid_proxy_token
 from .emails import send_enquiry_emails
@@ -103,10 +105,15 @@ def create_enquiry(request):
         logger.warning("Per-address limit hit for an enquiry from %s", ip)
         return error(429, RATE_LIMIT_MESSAGE, Retry_After="86400")
 
+    user_agent = request.headers.get("User-Agent", "")
+    country, _region, city = get_location(request)
     enquiry = Enquiry.objects.create(
         **cleaned,
+        **attribution_for(visitor_hash(ip, user_agent)),
+        country=country,
+        city=city,
         ip_address=ip,
-        user_agent=request.headers.get("User-Agent", "")[:300],
+        user_agent=user_agent[:300],
     )
     logger.info("Saved enquiry %s from %s", enquiry.reference, ip)
     send_enquiry_emails(enquiry)

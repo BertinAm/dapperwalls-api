@@ -41,6 +41,31 @@ A filled honeypot, `elapsed_ms` under 2500, or a missing `elapsed_ms` gets a
 
 Returns `{"ok": true}` without touching the database. Use it for uptime checks.
 
+### Owner dashboard (`/api/admin/*`)
+
+JSON API for the dashboard at `dapperwalls.co.uk/admin/` (staff accounts only,
+Django session cookie plus CSRF token, through the Worker in production):
+
+| Route | What it does |
+|---|---|
+| `GET admin/session/` | Who is signed in, and a CSRF token |
+| `POST admin/login/` | Sign in with username or email; `remember` keeps the session for `DASHBOARD_REMEMBER_DAYS` (14) |
+| `POST admin/logout/` | Sign out |
+| `POST admin/password-reset/`, `admin/password-reset/confirm/` | Emailed one-hour reset link |
+| `GET admin/overview/?days=7\|30\|90\|365` | Every number and chart on the dashboard |
+| `GET admin/enquiries/` | Members and Messages: search, filters, paging, read/unread |
+| `GET/PATCH/DELETE admin/enquiries/<ref>/` | One enquiry: status, notes, read |
+| `GET admin/enquiries/export/` | CSV of the current filter |
+| `GET/PUT admin/settings/`, `POST admin/password/` | Profile, notification emails, retention, password |
+
+### `POST /api/collect/`
+
+Cookieless visit counting from the public site (page views, quote form opens,
+contact and social clicks). Stores the page, where the visit came from, rough
+location from Cloudflare and device type. No IP address is kept: visitors are
+a keyed hash of IP and browser that changes daily. Bots, `/admin` pages and
+browsers sending Global Privacy Control are ignored. Always answers 204.
+
 ## How the proxy fits in
 
 The website calls `/api/*` on its own domain. A Cloudflare Pages Function
@@ -103,7 +128,9 @@ One-off setup:
    `EMAIL_*` settings.
 4. Add a cron job every 10 minutes that runs, inside the app's virtualenv and
    directory, `python manage.py send_pending_enquiry_emails`. It retries any
-   emails that failed to send.
+   emails that failed to send. Add a second, nightly, for
+   `python manage.py prune_analytics`, which deletes visit data older than the
+   retention set in the dashboard.
 5. Create an admin user with `python manage.py createsuperuser`.
 
 Each deploy, from the app's virtualenv in the application root:
@@ -122,6 +149,12 @@ The only expected warning is `security.W021` (HSTS preload not enabled). That
 is deliberate; set `SECURE_HSTS_PRELOAD=True` only if you decide to submit the
 domain to the browser preload list.
 
+Local demo data for the dashboard (refuses to run unless `DEBUG=True`):
+
+```sh
+python manage.py seed_demo_analytics --clear --days 90
+```
+
 ## Security
 
 - **Proxy only in production.** `POST /api/enquiries/` requires the Cloudflare Worker's `X-Proxy-Token` (`REQUIRE_PROXY_TOKEN`, on by default when `DEBUG=False`). Direct calls, including to the server's IP, get 403.
@@ -130,3 +163,4 @@ domain to the browser preload list.
 - **Input sanitising.** NFC normalisation; control and invisible formatting characters removed; line breaks stripped from single-line fields (they go into email headers); names limited to letters and name punctuation; phone and postcode character sets; messages with more than 3 links are dropped silently as spam. All output is HTML-escaped in templates; CSV export escapes spreadsheet formulas.
 - **Bots.** Honeypot field plus a minimum fill time; both get a fake success.
 - **Admin.** Custom `ADMIN_URL`; 5 failed logins from one IP lock that IP out for 15 minutes; sessions last 8 hours and end when the browser closes; secure, HTTP-only cookies.
+- **Dashboard.** Staff only, proxy token required, CSRF on every change. Login input is validated before it reaches the database; 5 failures per IP (or 10 per account) pause sign-in for 15 minutes and the response says how long. Every attempt (dashboard and Django admin) is stored in `LoginAttempt` and charted. Password reset links last one hour, work once, and the request answers the same whether or not the email is an admin's. Responses are `no-store` and `noindex`.
